@@ -1,0 +1,19 @@
+{
+  "name": "Moldura Casa",
+  "short_name": "Moldura Casa",
+  "description": "App para celular que aplica molduras em fotos de casas e ajuda a remover objetos de obra.",
+  "start_url": "./casa-moldura-app.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f7f4ee",
+  "theme_color": "#0b7f73",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

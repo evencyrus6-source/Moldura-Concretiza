@@ -1,0 +1,864 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0b7f73">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Moldura Casa">
+  <link rel="manifest" href="manifest.webmanifest">
+  <title>Moldura Casa</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #17191c;
+      --muted: #646b74;
+      --line: #dfe3e8;
+      --paper: #f7f4ee;
+      --panel: #ffffff;
+      --accent: #0b7f73;
+      --accent-2: #e2552e;
+      --soft: #edf6f4;
+      --shadow: 0 16px 45px rgba(20, 24, 31, .13);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--paper);
+      color: var(--ink);
+      -webkit-tap-highlight-color: transparent;
+      overscroll-behavior: none;
+    }
+
+    button, input, select {
+      font: inherit;
+    }
+
+    button {
+      border: 0;
+      min-height: 44px;
+      border-radius: 8px;
+      padding: 0 14px;
+      background: var(--panel);
+      color: var(--ink);
+      box-shadow: inset 0 0 0 1px var(--line);
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+
+    button.primary {
+      background: var(--accent);
+      color: #fff;
+      box-shadow: none;
+      font-weight: 700;
+    }
+
+    button.warn {
+      background: var(--accent-2);
+      color: #fff;
+      box-shadow: none;
+      font-weight: 700;
+    }
+
+    button.icon {
+      width: 44px;
+      padding: 0;
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+    }
+
+    button:disabled {
+      opacity: .45;
+      cursor: not-allowed;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--accent);
+    }
+
+    .app {
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      min-height: 100vh;
+      min-height: 100dvh;
+    }
+
+    header {
+      padding: max(14px, env(safe-area-inset-top)) 16px 12px;
+      background: rgba(247, 244, 238, .94);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid rgba(23, 25, 28, .08);
+      position: sticky;
+      top: 0;
+      z-index: 5;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 1.18rem;
+      line-height: 1.1;
+    }
+
+    .count {
+      color: var(--muted);
+      font-size: .88rem;
+      white-space: nowrap;
+    }
+
+    main {
+      display: grid;
+      grid-template-rows: minmax(0, 1fr) auto;
+      gap: 12px;
+      padding: 14px 14px 112px;
+    }
+
+    .stage-wrap {
+      display: grid;
+      place-items: center;
+      min-height: min(62dvh, 560px);
+    }
+
+    .stage {
+      width: min(100%, 520px);
+      aspect-ratio: 4 / 5;
+      background: #fff;
+      box-shadow: var(--shadow);
+      border-radius: 8px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      background: #f1f3f5;
+      touch-action: none;
+    }
+
+    .empty {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      text-align: center;
+      color: var(--muted);
+      background:
+        linear-gradient(135deg, rgba(11, 127, 115, .08), transparent 42%),
+        linear-gradient(315deg, rgba(226, 85, 46, .08), transparent 40%),
+        #fff;
+    }
+
+    .empty strong {
+      color: var(--ink);
+      display: block;
+      font-size: 1.15rem;
+      margin-bottom: 6px;
+    }
+
+    .filmstrip {
+      display: flex;
+      gap: 9px;
+      overflow-x: auto;
+      padding: 2px 2px 8px;
+      scrollbar-width: none;
+    }
+
+    .filmstrip::-webkit-scrollbar { display: none; }
+
+    .thumb {
+      flex: 0 0 58px;
+      height: 72px;
+      border-radius: 8px;
+      border: 2px solid transparent;
+      padding: 0;
+      overflow: hidden;
+      background: #fff;
+    }
+
+    .thumb.active {
+      border-color: var(--accent);
+    }
+
+    .thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .toolbar {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 8;
+      padding: 10px 12px max(12px, env(safe-area-inset-bottom));
+      background: rgba(255, 255, 255, .94);
+      border-top: 1px solid rgba(23, 25, 28, .1);
+      backdrop-filter: blur(16px);
+      display: grid;
+      gap: 10px;
+    }
+
+    .install-tip {
+      color: var(--muted);
+      font-size: .78rem;
+      line-height: 1.25;
+      text-align: center;
+      display: none;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .row.two {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .row button {
+      padding: 0 8px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px;
+      display: none;
+      gap: 12px;
+    }
+
+    .panel.open {
+      display: grid;
+    }
+
+    .control {
+      display: grid;
+      gap: 6px;
+    }
+
+    .control label {
+      font-size: .84rem;
+      font-weight: 700;
+      color: #30343a;
+    }
+
+    .seg {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .seg button.active {
+      background: var(--soft);
+      box-shadow: inset 0 0 0 2px var(--accent);
+      color: #075e55;
+      font-weight: 700;
+    }
+
+    .swatches {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+
+    .swatch {
+      min-height: 52px;
+      padding: 0;
+      border-radius: 8px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .swatch.active {
+      box-shadow: inset 0 0 0 3px var(--accent);
+    }
+
+    .swatch[data-frame="clean"] { background: #f8f8f5; }
+    .swatch[data-frame="broker"] { background: #102126; }
+    .swatch[data-frame="premium"] { background: #e8dfd2; }
+    .swatch[data-frame="sale"] { background: #0b7f73; }
+
+    .hidden {
+      display: none;
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 172px;
+      transform: translateX(-50%) translateY(16px);
+      background: rgba(23, 25, 28, .92);
+      color: #fff;
+      padding: 10px 14px;
+      border-radius: 8px;
+      opacity: 0;
+      pointer-events: none;
+      transition: .22s ease;
+      z-index: 12;
+      max-width: min(88vw, 420px);
+      text-align: center;
+      font-size: .92rem;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    @media (min-width: 760px) {
+      .app {
+        grid-template-columns: minmax(0, 1fr) 340px;
+        grid-template-rows: auto 1fr;
+      }
+
+      header {
+        grid-column: 1 / -1;
+      }
+
+      main {
+        padding: 22px;
+      }
+
+      .toolbar {
+        position: static;
+        grid-row: 2;
+        grid-column: 2;
+        align-content: start;
+        border-top: 0;
+        border-left: 1px solid rgba(23, 25, 28, .1);
+        padding: 18px;
+      }
+    }
+
+    @media (display-mode: browser) and (max-width: 759px) {
+      .install-tip {
+        display: block;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div class="brand">
+        <h1>Moldura Casa</h1>
+        <div class="count" id="count">0 fotos</div>
+      </div>
+    </header>
+
+    <main>
+      <section class="stage-wrap">
+        <div class="stage">
+          <canvas id="canvas" width="1200" height="1500" aria-label="Prévia da foto com moldura"></canvas>
+          <div class="empty" id="empty">
+            <div>
+              <strong>Fotos de imóveis prontas</strong>
+              <span>Importe imagens e escolha uma moldura.</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="filmstrip" id="filmstrip" aria-label="Fotos importadas"></section>
+    </main>
+
+    <section class="toolbar">
+      <div class="row">
+        <button class="primary" id="pickBtn">Fotos</button>
+        <button id="frameBtn">Moldura</button>
+        <button id="adjustBtn">Ajustar</button>
+        <button class="warn" id="removeBtn">Remover</button>
+      </div>
+
+      <div class="panel" id="framePanel">
+        <div class="control">
+          <label>Moldura</label>
+          <div class="swatches">
+            <button class="swatch active" data-frame="clean" title="Clara"></button>
+            <button class="swatch" data-frame="broker" title="Escura"></button>
+            <button class="swatch" data-frame="premium" title="Premium"></button>
+            <button class="swatch" data-frame="sale" title="Venda"></button>
+          </div>
+        </div>
+        <div class="row two">
+          <button id="customFrameBtn">Moldura PNG</button>
+          <button id="clearFrameBtn">Limpar PNG</button>
+        </div>
+      </div>
+
+      <div class="panel" id="adjustPanel">
+        <div class="control">
+          <label>Encaixe</label>
+          <div class="seg">
+            <button data-fit="cover" class="active">Cheio</button>
+            <button data-fit="contain">Inteiro</button>
+            <button data-fit="free">Livre</button>
+          </div>
+        </div>
+        <div class="control">
+          <label>Zoom</label>
+          <input id="zoom" type="range" min="60" max="190" value="100">
+        </div>
+        <div class="control">
+          <label>Posição</label>
+          <div class="row">
+            <button class="icon" id="leftBtn" title="Esquerda">‹</button>
+            <button class="icon" id="upBtn" title="Subir">⌃</button>
+            <button class="icon" id="downBtn" title="Descer">⌄</button>
+            <button class="icon" id="rightBtn" title="Direita">›</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel" id="removePanel">
+        <div class="control">
+          <label>Pincel</label>
+          <input id="brush" type="range" min="18" max="110" value="52">
+        </div>
+        <div class="row two">
+          <button id="autoCleanBtn">Auto</button>
+          <button id="undoCleanBtn">Desfazer</button>
+        </div>
+      </div>
+
+      <div class="row two">
+        <button id="downloadOneBtn">Baixar foto</button>
+        <button class="primary" id="downloadAllBtn">Baixar todas</button>
+      </div>
+      <div class="install-tip">No celular, use “Adicionar à Tela de Início” para abrir como app.</div>
+    </section>
+  </div>
+
+  <input id="photoInput" class="hidden" type="file" accept="image/*" multiple>
+  <input id="frameInput" class="hidden" type="file" accept="image/png,image/webp,image/*">
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    const photoInput = document.getElementById('photoInput');
+    const frameInput = document.getElementById('frameInput');
+    const filmstrip = document.getElementById('filmstrip');
+    const empty = document.getElementById('empty');
+    const count = document.getElementById('count');
+    const toastEl = document.getElementById('toast');
+
+    const state = {
+      photos: [],
+      selected: 0,
+      frame: 'clean',
+      customFrame: null,
+      fit: 'cover',
+      panel: null,
+      removing: false,
+      brush: 52,
+      drawing: false,
+      lastPoint: null
+    };
+
+    const frameStyles = {
+      clean: { matte: '#f9f7f2', line: '#222831', band: '#ffffff', text: '#222831', accent: '#0b7f73' },
+      broker: { matte: '#0f2026', line: '#f5eee3', band: '#122a30', text: '#f9f7f2', accent: '#d9b36a' },
+      premium: { matte: '#e9dfd0', line: '#4f3c2f', band: '#fffaf2', text: '#3b3029', accent: '#a56d38' },
+      sale: { matte: '#0b7f73', line: '#ffffff', band: '#e2552e', text: '#ffffff', accent: '#f6d45e' }
+    };
+
+    function toast(message) {
+      toastEl.textContent = message;
+      toastEl.classList.add('show');
+      clearTimeout(toastEl.timer);
+      toastEl.timer = setTimeout(() => toastEl.classList.remove('show'), 2100);
+    }
+
+    function loadImage(src) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = reject;
+        img.src = src;
+      });
+    }
+
+    function photo() {
+      return state.photos[state.selected];
+    }
+
+    function updateCount() {
+      const total = state.photos.length;
+      count.textContent = total === 1 ? '1 foto' : `${total} fotos`;
+      empty.style.display = total ? 'none' : 'grid';
+    }
+
+    function setPanel(name) {
+      state.panel = state.panel === name ? null : name;
+      document.querySelectorAll('.panel').forEach(panel => panel.classList.remove('open'));
+      if (state.panel) document.getElementById(`${state.panel}Panel`).classList.add('open');
+      state.removing = state.panel === 'remove';
+      render();
+    }
+
+    function imageRect(item) {
+      const margin = 96;
+      const lower = 164;
+      const box = { x: margin, y: margin, w: canvas.width - margin * 2, h: canvas.height - margin - lower };
+      const iw = item.work.width;
+      const ih = item.work.height;
+      const mode = item.fit || state.fit;
+      let scale = mode === 'contain' ? Math.min(box.w / iw, box.h / ih) : Math.max(box.w / iw, box.h / ih);
+      if (mode === 'free') scale = Math.min(box.w / iw, box.h / ih);
+      scale *= item.zoom;
+      const w = iw * scale;
+      const h = ih * scale;
+      return {
+        x: box.x + (box.w - w) / 2 + item.offsetX,
+        y: box.y + (box.h - h) / 2 + item.offsetY,
+        w, h, box
+      };
+    }
+
+    function drawFrame() {
+      const s = frameStyles[state.frame];
+      ctx.save();
+      ctx.fillStyle = s.matte;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = s.band;
+      ctx.fillRect(64, canvas.height - 184, canvas.width - 128, 106);
+      ctx.strokeStyle = s.line;
+      ctx.lineWidth = 12;
+      ctx.strokeRect(66, 66, canvas.width - 132, canvas.height - 236);
+      ctx.strokeStyle = s.accent;
+      ctx.lineWidth = 8;
+      ctx.strokeRect(92, 92, canvas.width - 184, canvas.height - 288);
+      ctx.fillStyle = s.text;
+      ctx.textAlign = 'center';
+      ctx.font = '700 52px Arial, sans-serif';
+      ctx.fillText('IMÓVEL EM DESTAQUE', canvas.width / 2, canvas.height - 124);
+      ctx.font = '400 30px Arial, sans-serif';
+      ctx.fillText('Foto pronta para anúncio', canvas.width / 2, canvas.height - 86);
+      ctx.restore();
+    }
+
+    function drawCustomFrame() {
+      if (!state.customFrame) return;
+      ctx.drawImage(state.customFrame, 0, 0, canvas.width, canvas.height);
+    }
+
+    function render(item = photo()) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawFrame();
+
+      if (item) {
+        const rect = imageRect(item);
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(rect.box.x, rect.box.y, rect.box.w, rect.box.h);
+        ctx.clip();
+        ctx.drawImage(item.work, rect.x, rect.y, rect.w, rect.h);
+        ctx.restore();
+      }
+
+      drawCustomFrame();
+
+      if (state.removing && item) {
+        ctx.save();
+        ctx.strokeStyle = 'rgba(226, 85, 46, .9)';
+        ctx.lineWidth = 5;
+        ctx.setLineDash([18, 12]);
+        const rect = imageRect(item).box;
+        ctx.strokeRect(rect.x + 8, rect.y + 8, rect.w - 16, rect.h - 16);
+        ctx.restore();
+      }
+    }
+
+    function rebuildFilmstrip() {
+      filmstrip.innerHTML = '';
+      state.photos.forEach((item, index) => {
+        const button = document.createElement('button');
+        button.className = `thumb ${index === state.selected ? 'active' : ''}`;
+        button.type = 'button';
+        const img = document.createElement('img');
+        img.src = item.url;
+        img.alt = `Foto ${index + 1}`;
+        button.appendChild(img);
+        button.addEventListener('click', () => {
+          state.selected = index;
+          rebuildFilmstrip();
+          syncControls();
+          render();
+        });
+        filmstrip.appendChild(button);
+      });
+      updateCount();
+    }
+
+    function syncControls() {
+      const item = photo();
+      document.getElementById('zoom').value = Math.round((item?.zoom || 1) * 100);
+      document.querySelectorAll('[data-fit]').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.fit === (item?.fit || state.fit));
+      });
+    }
+
+    async function addPhotos(files) {
+      const imageFiles = [...files].filter(file => file.type.startsWith('image/'));
+      for (const file of imageFiles) {
+        const url = URL.createObjectURL(file);
+        const img = await loadImage(url);
+        const work = document.createElement('canvas');
+        work.width = img.naturalWidth || img.width;
+        work.height = img.naturalHeight || img.height;
+        work.getContext('2d').drawImage(img, 0, 0);
+        state.photos.push({
+          name: file.name.replace(/\.[^.]+$/, ''),
+          url,
+          original: img,
+          work,
+          history: [],
+          zoom: 1,
+          offsetX: 0,
+          offsetY: 0,
+          fit: state.fit
+        });
+      }
+      if (state.photos.length) state.selected = Math.max(0, state.photos.length - imageFiles.length);
+      rebuildFilmstrip();
+      syncControls();
+      render();
+      if (imageFiles.length) toast(`${imageFiles.length} foto(s) importada(s)`);
+    }
+
+    function move(dx, dy) {
+      const item = photo();
+      if (!item) return;
+      item.offsetX += dx;
+      item.offsetY += dy;
+      render();
+    }
+
+    function saveHistory(item) {
+      const copy = document.createElement('canvas');
+      copy.width = item.work.width;
+      copy.height = item.work.height;
+      copy.getContext('2d').drawImage(item.work, 0, 0);
+      item.history.push(copy);
+      if (item.history.length > 6) item.history.shift();
+    }
+
+    function canvasPoint(event) {
+      const rect = canvas.getBoundingClientRect();
+      const client = event.touches ? event.touches[0] : event;
+      return {
+        x: (client.clientX - rect.left) * (canvas.width / rect.width),
+        y: (client.clientY - rect.top) * (canvas.height / rect.height)
+      };
+    }
+
+    function stageToImage(item, point) {
+      const rect = imageRect(item);
+      return {
+        x: Math.round((point.x - rect.x) * (item.work.width / rect.w)),
+        y: Math.round((point.y - rect.y) * (item.work.height / rect.h))
+      };
+    }
+
+    function cleanCircle(item, x, y, radius) {
+      const wctx = item.work.getContext('2d', { willReadFrequently: true });
+      const image = wctx.getImageData(0, 0, item.work.width, item.work.height);
+      const data = image.data;
+      const r = Math.max(8, radius);
+      const x0 = Math.max(0, x - r);
+      const x1 = Math.min(item.work.width - 1, x + r);
+      const y0 = Math.max(0, y - r);
+      const y1 = Math.min(item.work.height - 1, y + r);
+      let sr = 0, sg = 0, sb = 0, countPix = 0;
+
+      for (let yy = y - r * 2; yy <= y + r * 2; yy += 8) {
+        for (let xx = x - r * 2; xx <= x + r * 2; xx += 8) {
+          const d = Math.hypot(xx - x, yy - y);
+          if (d < r || xx < 0 || yy < 0 || xx >= item.work.width || yy >= item.work.height) continue;
+          const i = (yy * item.work.width + xx) * 4;
+          sr += data[i]; sg += data[i + 1]; sb += data[i + 2]; countPix++;
+        }
+      }
+
+      if (!countPix) return;
+      sr /= countPix; sg /= countPix; sb /= countPix;
+
+      for (let yy = y0; yy <= y1; yy++) {
+        for (let xx = x0; xx <= x1; xx++) {
+          const d = Math.hypot(xx - x, yy - y);
+          if (d > r) continue;
+          const i = (yy * item.work.width + xx) * 4;
+          const edge = Math.min(1, (r - d) / (r * .48));
+          const mix = Math.max(0, Math.min(.92, edge));
+          data[i] = data[i] * (1 - mix) + sr * mix;
+          data[i + 1] = data[i + 1] * (1 - mix) + sg * mix;
+          data[i + 2] = data[i + 2] * (1 - mix) + sb * mix;
+        }
+      }
+      wctx.putImageData(image, 0, 0);
+    }
+
+    function cleanAt(event) {
+      const item = photo();
+      if (!item || !state.removing) return;
+      const p = stageToImage(item, canvasPoint(event));
+      cleanCircle(item, p.x, p.y, state.brush * (item.work.width / imageRect(item).w));
+      render();
+    }
+
+    function autoClean() {
+      const item = photo();
+      if (!item) return;
+      saveHistory(item);
+      const wctx = item.work.getContext('2d', { willReadFrequently: true });
+      const img = wctx.getImageData(0, 0, item.work.width, item.work.height);
+      const data = img.data;
+      const startY = Math.floor(item.work.height * .58);
+      for (let y = startY; y < item.work.height; y += 12) {
+        for (let x = 0; x < item.work.width; x += 12) {
+          const i = (y * item.work.width + x) * 4;
+          const r = data[i], g = data[i + 1], b = data[i + 2];
+          const constructionColor = (r > 145 && g > 70 && b < 95) || (r > 170 && g > 150 && b < 90) || (b > 135 && r < 115);
+          const brightClutter = r + g + b > 650;
+          if (constructionColor || brightClutter) cleanCircle(item, x, y, Math.max(18, item.work.width * .018));
+        }
+      }
+      render();
+      toast('Limpeza automática aplicada');
+    }
+
+    async function downloadItem(item, index) {
+      render(item);
+      await new Promise(requestAnimationFrame);
+      const link = document.createElement('a');
+      link.download = `${item.name || 'foto'}-com-moldura-${index + 1}.jpg`;
+      link.href = canvas.toDataURL('image/jpeg', .94);
+      link.click();
+    }
+
+    document.getElementById('pickBtn').addEventListener('click', () => photoInput.click());
+    document.getElementById('customFrameBtn').addEventListener('click', () => frameInput.click());
+    document.getElementById('clearFrameBtn').addEventListener('click', () => {
+      state.customFrame = null;
+      render();
+      toast('Moldura PNG removida');
+    });
+    document.getElementById('frameBtn').addEventListener('click', () => setPanel('frame'));
+    document.getElementById('adjustBtn').addEventListener('click', () => setPanel('adjust'));
+    document.getElementById('removeBtn').addEventListener('click', () => setPanel('remove'));
+    document.getElementById('leftBtn').addEventListener('click', () => move(-22, 0));
+    document.getElementById('rightBtn').addEventListener('click', () => move(22, 0));
+    document.getElementById('upBtn').addEventListener('click', () => move(0, -22));
+    document.getElementById('downBtn').addEventListener('click', () => move(0, 22));
+    document.getElementById('autoCleanBtn').addEventListener('click', autoClean);
+    document.getElementById('undoCleanBtn').addEventListener('click', () => {
+      const item = photo();
+      const previous = item?.history.pop();
+      if (!previous) return;
+      item.work = previous;
+      render();
+    });
+    document.getElementById('downloadOneBtn').addEventListener('click', () => {
+      const item = photo();
+      if (!item) return toast('Importe uma foto primeiro');
+      downloadItem(item, state.selected);
+    });
+    document.getElementById('downloadAllBtn').addEventListener('click', async () => {
+      if (!state.photos.length) return toast('Importe fotos primeiro');
+      for (let i = 0; i < state.photos.length; i++) await downloadItem(state.photos[i], i);
+      state.selected = Math.min(state.selected, state.photos.length - 1);
+      render();
+    });
+
+    photoInput.addEventListener('change', event => addPhotos(event.target.files));
+    frameInput.addEventListener('change', async event => {
+      const file = event.target.files[0];
+      if (!file) return;
+      state.customFrame = await loadImage(URL.createObjectURL(file));
+      render();
+      toast('Moldura personalizada aplicada');
+    });
+
+    document.querySelectorAll('.swatch').forEach(button => {
+      button.addEventListener('click', () => {
+        state.frame = button.dataset.frame;
+        document.querySelectorAll('.swatch').forEach(b => b.classList.toggle('active', b === button));
+        render();
+      });
+    });
+
+    document.querySelectorAll('[data-fit]').forEach(button => {
+      button.addEventListener('click', () => {
+        const item = photo();
+        state.fit = button.dataset.fit;
+        if (item) item.fit = state.fit;
+        syncControls();
+        render();
+      });
+    });
+
+    document.getElementById('zoom').addEventListener('input', event => {
+      const item = photo();
+      if (!item) return;
+      item.zoom = Number(event.target.value) / 100;
+      render();
+    });
+
+    document.getElementById('brush').addEventListener('input', event => {
+      state.brush = Number(event.target.value);
+    });
+
+    canvas.addEventListener('pointerdown', event => {
+      if (!state.removing || !photo()) return;
+      canvas.setPointerCapture(event.pointerId);
+      state.drawing = true;
+      saveHistory(photo());
+      cleanAt(event);
+    });
+
+    canvas.addEventListener('pointermove', event => {
+      if (!state.drawing) return;
+      cleanAt(event);
+    });
+
+    canvas.addEventListener('pointerup', event => {
+      state.drawing = false;
+      try { canvas.releasePointerCapture(event.pointerId); } catch {}
+    });
+
+    canvas.addEventListener('pointercancel', () => {
+      state.drawing = false;
+    });
+
+    render();
+
+    if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+      navigator.serviceWorker.register('./service-worker.js').catch(() => {});
+    }
+  </script>
+</body>
+</html>
