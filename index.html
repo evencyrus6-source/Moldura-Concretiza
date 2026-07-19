@@ -512,10 +512,39 @@
       });
     }
 
-    function makeWorkCanvas(img) {
+    async function decodePhotoFile(file) {
+      if (!file || !file.size) throw new Error('Arquivo vazio ou não disponível no aparelho');
+
+      if ('createImageBitmap' in window) {
+        try {
+          const bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' });
+          return {
+            source: bitmap,
+            width: bitmap.width,
+            height: bitmap.height,
+            previewUrl: URL.createObjectURL(file),
+            close: () => bitmap.close?.()
+          };
+        } catch (error) {
+          console.warn('createImageBitmap falhou, tentando FileReader', error);
+        }
+      }
+
+      const dataUrl = await readFileAsDataURL(file);
+      const img = await loadImage(dataUrl);
+      return {
+        source: img,
+        width: img.naturalWidth || img.width,
+        height: img.naturalHeight || img.height,
+        previewUrl: dataUrl,
+        close: () => {}
+      };
+    }
+
+    function makeWorkCanvas(decoded) {
       const maxSide = 2600;
-      const sourceWidth = img.naturalWidth || img.width || 1;
-      const sourceHeight = img.naturalHeight || img.height || 1;
+      const sourceWidth = decoded.width || 1;
+      const sourceHeight = decoded.height || 1;
       const scale = Math.min(1, maxSide / Math.max(sourceWidth, sourceHeight));
       const work = document.createElement('canvas');
       work.width = Math.max(1, Math.round(sourceWidth * scale));
@@ -525,7 +554,7 @@
       workCtx.imageSmoothingQuality = 'high';
       workCtx.fillStyle = '#ffffff';
       workCtx.fillRect(0, 0, work.width, work.height);
-      workCtx.drawImage(img, 0, 0, work.width, work.height);
+      workCtx.drawImage(decoded.source, 0, 0, work.width, work.height);
       return work;
     }
 
@@ -652,17 +681,20 @@
     async function addPhotos(files) {
       const imageFiles = [...files].filter(file => file.type.startsWith('image/'));
       let loaded = 0;
+      let failed = 0;
       let firstNewIndex = state.photos.length;
 
       for (const file of imageFiles) {
         try {
-          const url = await readFileAsDataURL(file);
-          const img = await loadImage(url);
-          const work = makeWorkCanvas(img);
+          toast(`Abrindo ${file.name || 'foto'}...`);
+          const decoded = await decodePhotoFile(file);
+          const work = makeWorkCanvas(decoded);
+          decoded.close();
+
           state.photos.push({
             name: file.name.replace(/\.[^.]+$/, ''),
-            url,
-            original: img,
+            url: decoded.previewUrl,
+            original: null,
             work,
             history: [],
             zoom: 1,
@@ -679,7 +711,8 @@
           render(state.photos[state.selected]);
           await new Promise(requestAnimationFrame);
         } catch (error) {
-          console.warn('Foto não carregada', file.name, error);
+          failed++;
+          console.warn('Foto não carregada', file.name, file.type, file.size, error);
         }
       }
 
@@ -688,7 +721,8 @@
       syncControls();
       render();
       if (loaded) toast(`${loaded} foto(s) pronta(s) na moldura`);
-      if (!loaded && imageFiles.length) toast('Não consegui abrir essas fotos. Tente JPG ou PNG.');
+      if (failed && loaded) toast(`${loaded} pronta(s). ${failed} não abriu. Tente JPG/PNG.`);
+      if (!loaded && imageFiles.length) toast('Não abriu. No Google Fotos, use Baixar/Salvar no dispositivo e tente JPG/PNG.');
     }
 
     function move(dx, dy) {
