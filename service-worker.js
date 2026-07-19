@@ -1,4 +1,4 @@
-const CACHE_NAME = 'moldura-casa-v4';
+const CACHE_NAME = 'moldura-casa-v6';
 const FILES = [
   './',
   './index.html',

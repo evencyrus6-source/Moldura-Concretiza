@@ -131,6 +131,17 @@
       user-select: none;
     }
 
+    #customFramePreview {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: fill;
+      display: none;
+      pointer-events: none;
+      z-index: 4;
+    }
+
     .empty {
       position: absolute;
       inset: 0;
@@ -161,6 +172,7 @@
       text-align: center;
       color: #222831;
       padding: 6px;
+      z-index: 2;
     }
 
     .caption strong {
@@ -274,7 +286,9 @@
 
     .swatch {
       min-height: 48px;
-      padding: 0;
+      padding: 0 6px;
+      font-size: .82rem;
+      color: #17191c;
     }
 
     .swatch.active {
@@ -282,9 +296,9 @@
     }
 
     .s-clean { background: #f9f7f2; }
-    .s-dark { background: var(--dark); }
+    .s-dark { background: var(--dark); color: #fff; }
     .s-premium { background: #e9dfd0; }
-    .s-sale { background: var(--green); }
+    .s-sale { background: var(--green); color: #fff; }
 
     .hidden {
       display: none;
@@ -332,6 +346,7 @@
               <div><b>Escolha uma foto</b><span>A imagem aparece aqui antes de baixar.</span></div>
             </div>
           </div>
+          <img id="customFramePreview" alt="Moldura personalizada">
           <div class="caption">
             <div><strong>IMOVEL EM DESTAQUE</strong><span>Foto pronta para anuncio</span></div>
           </div>
@@ -351,10 +366,14 @@
       <div class="panel" id="framePanel">
         <label>Moldura</label>
         <div class="swatches">
-          <button class="swatch s-clean active" data-style="clean"></button>
-          <button class="swatch s-dark" data-style="dark"></button>
-          <button class="swatch s-premium" data-style="premium"></button>
-          <button class="swatch s-sale" data-style="sale"></button>
+          <button class="swatch s-clean active" data-style="clean">Clara</button>
+          <button class="swatch s-dark" data-style="dark">Escura</button>
+          <button class="swatch s-premium" data-style="premium">Premium</button>
+          <button class="swatch s-sale" data-style="sale">Venda</button>
+        </div>
+        <div class="row two">
+          <button id="customFrameBtn">Minha moldura</button>
+          <button id="clearFrameBtn">Limpar moldura</button>
         </div>
       </div>
 
@@ -379,21 +398,26 @@
   </div>
 
   <input id="photoInput" class="hidden" type="file" accept="image/jpeg,image/png,image/webp,image/*" multiple>
+  <input id="frameInput" class="hidden" type="file" accept="image/png,image/webp,image/jpeg,image/*">
   <div class="toast" id="toast"></div>
 
   <script>
     const frame = document.getElementById('frame');
     const photoPreview = document.getElementById('photoPreview');
+    const customFramePreview = document.getElementById('customFramePreview');
     const empty = document.getElementById('empty');
     const strip = document.getElementById('strip');
     const counter = document.getElementById('counter');
     const photoInput = document.getElementById('photoInput');
+    const frameInput = document.getElementById('frameInput');
     const toastEl = document.getElementById('toast');
 
     const state = {
       photos: [],
       selected: -1,
       style: 'clean',
+      customFrameUrl: '',
+      customFrameImage: null,
       zoom: 1,
       x: 0,
       y: 0
@@ -420,6 +444,7 @@
     function updatePreview() {
       const item = current();
       counter.textContent = state.photos.length === 1 ? '1 foto' : `${state.photos.length} fotos`;
+      frame.className = `frame style-${state.style}`;
 
       if (!item) {
         photoPreview.style.display = 'none';
@@ -431,8 +456,8 @@
       photoPreview.style.display = 'block';
       empty.style.display = 'none';
       photoPreview.style.transform = `translate(${item.x}px, ${item.y}px) scale(${item.zoom})`;
-
-      frame.className = `frame style-${state.style}`;
+      customFramePreview.src = state.customFrameUrl || '';
+      customFramePreview.style.display = state.customFrameUrl ? 'block' : 'none';
     }
 
     function rebuildStrip() {
@@ -539,19 +564,23 @@
       drawImageCover(ctx, img, box.x, box.y, box.w, box.h, item.zoom, item.x * 3, item.y * 3);
       ctx.restore();
 
-      ctx.strokeStyle = s.border;
-      ctx.lineWidth = 16;
-      ctx.strokeRect(box.x, box.y, box.w, box.h);
+      if (state.customFrameImage) {
+        ctx.drawImage(state.customFrameImage, 0, 0, canvas.width, canvas.height);
+      } else {
+        ctx.strokeStyle = s.border;
+        ctx.lineWidth = 16;
+        ctx.strokeRect(box.x, box.y, box.w, box.h);
 
-      ctx.fillStyle = s.capBg;
-      ctx.fillRect(96, 1290, 1008, 120);
-      ctx.fillStyle = s.capText;
-      ctx.textAlign = 'center';
-      ctx.font = '700 52px Arial';
-      ctx.fillText('IMOVEL EM DESTAQUE', 600, 1348);
-      ctx.fillStyle = s.capSub;
-      ctx.font = '400 30px Arial';
-      ctx.fillText('Foto pronta para anuncio', 600, 1392);
+        ctx.fillStyle = s.capBg;
+        ctx.fillRect(96, 1290, 1008, 120);
+        ctx.fillStyle = s.capText;
+        ctx.textAlign = 'center';
+        ctx.font = '700 52px Arial';
+        ctx.fillText('IMOVEL EM DESTAQUE', 600, 1348);
+        ctx.fillStyle = s.capSub;
+        ctx.font = '400 30px Arial';
+        ctx.fillText('Foto pronta para anuncio', 600, 1392);
+      }
 
       return canvas.toDataURL('image/jpeg', .94);
     }
@@ -566,6 +595,32 @@
 
     document.getElementById('pickBtn').addEventListener('click', () => photoInput.click());
     photoInput.addEventListener('change', event => addPhotos(event.target.files));
+    document.getElementById('customFrameBtn').addEventListener('click', () => frameInput.click());
+    document.getElementById('clearFrameBtn').addEventListener('click', () => {
+      if (state.customFrameUrl) URL.revokeObjectURL(state.customFrameUrl);
+      state.customFrameUrl = '';
+      state.customFrameImage = null;
+      customFramePreview.style.display = 'none';
+      updatePreview();
+      toast('Moldura personalizada removida');
+    });
+
+    frameInput.addEventListener('change', async event => {
+      const file = event.target.files[0];
+      if (!file || !file.type.startsWith('image/')) return toast('Escolha uma imagem de moldura.');
+      if (state.customFrameUrl) URL.revokeObjectURL(state.customFrameUrl);
+      const url = URL.createObjectURL(file);
+      try {
+        state.customFrameImage = await openImage(url);
+        state.customFrameUrl = url;
+        updatePreview();
+        toast('Sua moldura foi selecionada');
+      } catch {
+        URL.revokeObjectURL(url);
+        toast('Essa moldura não abriu. Use PNG ou JPG.');
+      }
+      frameInput.value = '';
+    });
 
     document.getElementById('frameBtn').addEventListener('click', () => {
       document.getElementById('framePanel').classList.toggle('open');
@@ -582,6 +637,7 @@
         state.style = button.dataset.style;
         document.querySelectorAll('.swatch').forEach(item => item.classList.toggle('active', item === button));
         updatePreview();
+        toast(`Moldura ${button.textContent} selecionada`);
       });
     });
 
