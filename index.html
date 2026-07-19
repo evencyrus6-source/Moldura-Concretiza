@@ -496,10 +496,37 @@
     function loadImage(src) {
       return new Promise((resolve, reject) => {
         const img = new Image();
+        img.decoding = 'async';
         img.onload = () => resolve(img);
         img.onerror = reject;
         img.src = src;
       });
+    }
+
+    function readFileAsDataURL(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function makeWorkCanvas(img) {
+      const maxSide = 2600;
+      const sourceWidth = img.naturalWidth || img.width || 1;
+      const sourceHeight = img.naturalHeight || img.height || 1;
+      const scale = Math.min(1, maxSide / Math.max(sourceWidth, sourceHeight));
+      const work = document.createElement('canvas');
+      work.width = Math.max(1, Math.round(sourceWidth * scale));
+      work.height = Math.max(1, Math.round(sourceHeight * scale));
+      const workCtx = work.getContext('2d', { willReadFrequently: true });
+      workCtx.imageSmoothingEnabled = true;
+      workCtx.imageSmoothingQuality = 'high';
+      workCtx.fillStyle = '#ffffff';
+      workCtx.fillRect(0, 0, work.width, work.height);
+      workCtx.drawImage(img, 0, 0, work.width, work.height);
+      return work;
     }
 
     function photo() {
@@ -624,30 +651,44 @@
 
     async function addPhotos(files) {
       const imageFiles = [...files].filter(file => file.type.startsWith('image/'));
+      let loaded = 0;
+      let firstNewIndex = state.photos.length;
+
       for (const file of imageFiles) {
-        const url = URL.createObjectURL(file);
-        const img = await loadImage(url);
-        const work = document.createElement('canvas');
-        work.width = img.naturalWidth || img.width;
-        work.height = img.naturalHeight || img.height;
-        work.getContext('2d').drawImage(img, 0, 0);
-        state.photos.push({
-          name: file.name.replace(/\.[^.]+$/, ''),
-          url,
-          original: img,
-          work,
-          history: [],
-          zoom: 1,
-          offsetX: 0,
-          offsetY: 0,
-          fit: state.fit
-        });
+        try {
+          const url = await readFileAsDataURL(file);
+          const img = await loadImage(url);
+          const work = makeWorkCanvas(img);
+          state.photos.push({
+            name: file.name.replace(/\.[^.]+$/, ''),
+            url,
+            original: img,
+            work,
+            history: [],
+            zoom: 1,
+            offsetX: 0,
+            offsetY: 0,
+            fit: state.fit
+          });
+          loaded++;
+
+          if (loaded === 1) state.selected = firstNewIndex;
+          rebuildFilmstrip();
+          syncControls();
+          updateCount();
+          render(state.photos[state.selected]);
+          await new Promise(requestAnimationFrame);
+        } catch (error) {
+          console.warn('Foto não carregada', file.name, error);
+        }
       }
-      if (state.photos.length) state.selected = Math.max(0, state.photos.length - imageFiles.length);
+
+      if (state.photos.length && loaded) state.selected = firstNewIndex;
       rebuildFilmstrip();
       syncControls();
       render();
-      if (imageFiles.length) toast(`${imageFiles.length} foto(s) importada(s)`);
+      if (loaded) toast(`${loaded} foto(s) pronta(s) na moldura`);
+      if (!loaded && imageFiles.length) toast('Não consegui abrir essas fotos. Tente JPG ou PNG.');
     }
 
     function move(dx, dy) {

@@ -1,6 +1,7 @@
-const CACHE_NAME = 'moldura-casa-v1';
+const CACHE_NAME = 'moldura-casa-v2';
 const FILES = [
   './',
+  './index.html',
   './casa-moldura-app.html',
   './manifest.webmanifest',
   './icon.svg'
