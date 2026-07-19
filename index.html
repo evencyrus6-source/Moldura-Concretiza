@@ -5,125 +5,93 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0b7f73">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Moldura Casa">
   <link rel="manifest" href="manifest.webmanifest">
   <title>Moldura Casa</title>
   <style>
     :root {
-      color-scheme: light;
+      --bg: #f7f4ee;
       --ink: #17191c;
-      --muted: #646b74;
+      --muted: #66707a;
       --line: #dfe3e8;
-      --paper: #f7f4ee;
       --panel: #ffffff;
-      --accent: #0b7f73;
-      --accent-2: #e2552e;
-      --soft: #edf6f4;
-      --shadow: 0 16px 45px rgba(20, 24, 31, .13);
+      --green: #0b7f73;
+      --orange: #e2552e;
+      --gold: #d9b36a;
+      --dark: #102126;
     }
 
     * { box-sizing: border-box; }
 
-    body {
+    html, body {
       margin: 0;
-      min-height: 100vh;
-      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: var(--paper);
+      min-height: 100%;
+      background: var(--bg);
       color: var(--ink);
+      font-family: Arial, Helvetica, sans-serif;
       -webkit-tap-highlight-color: transparent;
-      overscroll-behavior: none;
     }
 
-    button, input, select {
+    button, input {
       font: inherit;
     }
 
     button {
+      min-height: 46px;
       border: 0;
-      min-height: 44px;
       border-radius: 8px;
-      padding: 0 14px;
       background: var(--panel);
       color: var(--ink);
       box-shadow: inset 0 0 0 1px var(--line);
-      cursor: pointer;
-      touch-action: manipulation;
+      font-weight: 700;
+      padding: 0 12px;
     }
 
-    button.primary {
-      background: var(--accent);
+    .primary {
+      background: var(--green);
       color: #fff;
       box-shadow: none;
-      font-weight: 700;
-    }
-
-    button.warn {
-      background: var(--accent-2);
-      color: #fff;
-      box-shadow: none;
-      font-weight: 700;
-    }
-
-    button.icon {
-      width: 44px;
-      padding: 0;
-      display: grid;
-      place-items: center;
-      font-weight: 800;
-    }
-
-    button:disabled {
-      opacity: .45;
-      cursor: not-allowed;
-    }
-
-    input[type="range"] {
-      width: 100%;
-      accent-color: var(--accent);
     }
 
     .app {
-      display: grid;
-      grid-template-rows: auto 1fr auto;
       min-height: 100vh;
       min-height: 100dvh;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
     }
 
     header {
-      padding: max(14px, env(safe-area-inset-top)) 16px 12px;
-      background: rgba(247, 244, 238, .94);
-      backdrop-filter: blur(14px);
-      border-bottom: 1px solid rgba(23, 25, 28, .08);
+      padding: max(14px, env(safe-area-inset-top)) 14px 10px;
+      background: rgba(247, 244, 238, .96);
+      border-bottom: 1px solid rgba(0,0,0,.08);
       position: sticky;
       top: 0;
       z-index: 5;
     }
 
-    .brand {
+    .top {
       display: flex;
-      align-items: center;
       justify-content: space-between;
+      align-items: center;
       gap: 12px;
     }
 
     h1 {
       margin: 0;
-      font-size: 1.18rem;
-      line-height: 1.1;
+      font-size: 1.1rem;
     }
 
-    .count {
+    .counter {
       color: var(--muted);
-      font-size: .88rem;
+      font-size: .86rem;
       white-space: nowrap;
     }
 
     main {
+      padding: 14px 14px 126px;
       display: grid;
-      grid-template-rows: minmax(0, 1fr) auto;
+      grid-template-rows: 1fr auto;
       gap: 12px;
-      padding: 14px 14px 112px;
     }
 
     .stage-wrap {
@@ -132,22 +100,35 @@
       min-height: min(62dvh, 560px);
     }
 
-    .stage {
+    .frame {
       width: min(100%, 520px);
       aspect-ratio: 4 / 5;
-      background: #fff;
-      box-shadow: var(--shadow);
-      border-radius: 8px;
-      overflow: hidden;
       position: relative;
+      overflow: hidden;
+      border-radius: 8px;
+      background: #f9f7f2;
+      box-shadow: 0 18px 45px rgba(20,24,31,.16);
     }
 
-    canvas {
+    .photo-box {
+      position: absolute;
+      left: 8%;
+      top: 6.4%;
+      width: 84%;
+      height: 74%;
+      overflow: hidden;
+      background: #eef1f4;
+      border: 4px solid #0b7f73;
+    }
+
+    #photoPreview {
       width: 100%;
       height: 100%;
-      display: block;
-      background: #f1f3f5;
+      object-fit: cover;
+      transform-origin: center;
+      display: none;
       touch-action: none;
+      user-select: none;
     }
 
     .empty {
@@ -155,44 +136,75 @@
       inset: 0;
       display: grid;
       place-items: center;
-      padding: 24px;
       text-align: center;
       color: var(--muted);
-      background:
-        linear-gradient(135deg, rgba(11, 127, 115, .08), transparent 42%),
-        linear-gradient(315deg, rgba(226, 85, 46, .08), transparent 40%),
-        #fff;
+      padding: 24px;
+      z-index: 1;
     }
 
-    .empty strong {
-      color: var(--ink);
+    .empty b {
       display: block;
-      font-size: 1.15rem;
+      color: var(--ink);
       margin-bottom: 6px;
+      font-size: 1.08rem;
     }
 
-    .filmstrip {
+    .caption {
+      position: absolute;
+      left: 8%;
+      bottom: 5.2%;
+      width: 84%;
+      height: 9%;
+      background: #ffffff;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      color: #222831;
+      padding: 6px;
+    }
+
+    .caption strong {
+      display: block;
+      font-size: clamp(.9rem, 4vw, 1.55rem);
+      line-height: 1.05;
+    }
+
+    .caption span {
+      color: var(--muted);
+      font-size: clamp(.68rem, 2.8vw, .95rem);
+    }
+
+    .style-dark { background: var(--dark); }
+    .style-dark .photo-box { border-color: var(--gold); }
+    .style-dark .caption { background: #122a30; color: #fff; }
+    .style-dark .caption span { color: #f5eee3; }
+
+    .style-premium { background: #e9dfd0; }
+    .style-premium .photo-box { border-color: #a56d38; }
+    .style-premium .caption { background: #fffaf2; color: #3b3029; }
+
+    .style-sale { background: var(--green); }
+    .style-sale .photo-box { border-color: #f6d45e; }
+    .style-sale .caption { background: var(--orange); color: #fff; }
+    .style-sale .caption span { color: #fff; }
+
+    .strip {
       display: flex;
-      gap: 9px;
+      gap: 8px;
       overflow-x: auto;
       padding: 2px 2px 8px;
-      scrollbar-width: none;
     }
-
-    .filmstrip::-webkit-scrollbar { display: none; }
 
     .thumb {
       flex: 0 0 58px;
       height: 72px;
-      border-radius: 8px;
       border: 2px solid transparent;
-      padding: 0;
       overflow: hidden;
-      background: #fff;
+      padding: 0;
     }
 
     .thumb.active {
-      border-color: var(--accent);
+      border-color: var(--green);
     }
 
     .thumb img {
@@ -202,26 +214,17 @@
       display: block;
     }
 
-    .toolbar {
+    .bar {
       position: fixed;
       left: 0;
       right: 0;
       bottom: 0;
-      z-index: 8;
+      z-index: 10;
+      background: rgba(255,255,255,.96);
+      border-top: 1px solid rgba(0,0,0,.1);
       padding: 10px 12px max(12px, env(safe-area-inset-bottom));
-      background: rgba(255, 255, 255, .94);
-      border-top: 1px solid rgba(23, 25, 28, .1);
-      backdrop-filter: blur(16px);
       display: grid;
       gap: 10px;
-    }
-
-    .install-tip {
-      color: var(--muted);
-      font-size: .78rem;
-      line-height: 1.25;
-      text-align: center;
-      display: none;
     }
 
     .row {
@@ -234,24 +237,23 @@
       grid-template-columns: 1fr 1fr;
     }
 
-    .row button {
-      padding: 0 8px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
     .panel {
-      background: var(--panel);
+      display: none;
       border: 1px solid var(--line);
       border-radius: 8px;
+      background: #fff;
       padding: 12px;
-      display: none;
-      gap: 12px;
+      gap: 10px;
     }
 
     .panel.open {
       display: grid;
+    }
+
+    label {
+      font-size: .82rem;
+      font-weight: 700;
+      color: #30343a;
     }
 
     .control {
@@ -259,23 +261,9 @@
       gap: 6px;
     }
 
-    .control label {
-      font-size: .84rem;
-      font-weight: 700;
-      color: #30343a;
-    }
-
-    .seg {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
-    }
-
-    .seg button.active {
-      background: var(--soft);
-      box-shadow: inset 0 0 0 2px var(--accent);
-      color: #075e55;
-      font-weight: 700;
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--green);
     }
 
     .swatches {
@@ -285,21 +273,18 @@
     }
 
     .swatch {
-      min-height: 52px;
+      min-height: 48px;
       padding: 0;
-      border-radius: 8px;
-      overflow: hidden;
-      position: relative;
     }
 
     .swatch.active {
-      box-shadow: inset 0 0 0 3px var(--accent);
+      box-shadow: inset 0 0 0 3px var(--green);
     }
 
-    .swatch[data-frame="clean"] { background: #f8f8f5; }
-    .swatch[data-frame="broker"] { background: #102126; }
-    .swatch[data-frame="premium"] { background: #e8dfd2; }
-    .swatch[data-frame="sale"] { background: #0b7f73; }
+    .s-clean { background: #f9f7f2; }
+    .s-dark { background: var(--dark); }
+    .s-premium { background: #e9dfd0; }
+    .s-sale { background: var(--green); }
 
     .hidden {
       display: none;
@@ -308,632 +293,325 @@
     .toast {
       position: fixed;
       left: 50%;
-      bottom: 172px;
-      transform: translateX(-50%) translateY(16px);
-      background: rgba(23, 25, 28, .92);
+      bottom: 178px;
+      transform: translateX(-50%) translateY(14px);
+      background: rgba(23,25,28,.92);
       color: #fff;
       padding: 10px 14px;
       border-radius: 8px;
       opacity: 0;
       pointer-events: none;
-      transition: .22s ease;
-      z-index: 12;
-      max-width: min(88vw, 420px);
+      transition: .2s ease;
+      z-index: 20;
+      max-width: 88vw;
       text-align: center;
-      font-size: .92rem;
+      font-size: .9rem;
     }
 
     .toast.show {
       opacity: 1;
       transform: translateX(-50%) translateY(0);
     }
-
-    @media (min-width: 760px) {
-      .app {
-        grid-template-columns: minmax(0, 1fr) 340px;
-        grid-template-rows: auto 1fr;
-      }
-
-      header {
-        grid-column: 1 / -1;
-      }
-
-      main {
-        padding: 22px;
-      }
-
-      .toolbar {
-        position: static;
-        grid-row: 2;
-        grid-column: 2;
-        align-content: start;
-        border-top: 0;
-        border-left: 1px solid rgba(23, 25, 28, .1);
-        padding: 18px;
-      }
-    }
-
-    @media (display-mode: browser) and (max-width: 759px) {
-      .install-tip {
-        display: block;
-      }
-    }
   </style>
 </head>
 <body>
   <div class="app">
     <header>
-      <div class="brand">
+      <div class="top">
         <h1>Moldura Casa</h1>
-        <div class="count" id="count">0 fotos</div>
+        <div class="counter" id="counter">0 fotos</div>
       </div>
     </header>
 
     <main>
       <section class="stage-wrap">
-        <div class="stage">
-          <canvas id="canvas" width="1200" height="1500" aria-label="Prévia da foto com moldura"></canvas>
-          <div class="empty" id="empty">
-            <div>
-              <strong>Fotos de imóveis prontas</strong>
-              <span>Importe imagens e escolha uma moldura.</span>
+        <div class="frame" id="frame">
+          <div class="photo-box">
+            <img id="photoPreview" alt="Foto selecionada">
+            <div class="empty" id="empty">
+              <div><b>Escolha uma foto</b><span>A imagem aparece aqui antes de baixar.</span></div>
             </div>
+          </div>
+          <div class="caption">
+            <div><strong>IMOVEL EM DESTAQUE</strong><span>Foto pronta para anuncio</span></div>
           </div>
         </div>
       </section>
-
-      <section class="filmstrip" id="filmstrip" aria-label="Fotos importadas"></section>
+      <section class="strip" id="strip"></section>
     </main>
 
-    <section class="toolbar">
+    <section class="bar">
       <div class="row">
         <button class="primary" id="pickBtn">Fotos</button>
         <button id="frameBtn">Moldura</button>
         <button id="adjustBtn">Ajustar</button>
-        <button class="warn" id="removeBtn">Remover</button>
+        <button id="resetBtn">Reset</button>
       </div>
 
       <div class="panel" id="framePanel">
-        <div class="control">
-          <label>Moldura</label>
-          <div class="swatches">
-            <button class="swatch active" data-frame="clean" title="Clara"></button>
-            <button class="swatch" data-frame="broker" title="Escura"></button>
-            <button class="swatch" data-frame="premium" title="Premium"></button>
-            <button class="swatch" data-frame="sale" title="Venda"></button>
-          </div>
-        </div>
-        <div class="row two">
-          <button id="customFrameBtn">Moldura PNG</button>
-          <button id="clearFrameBtn">Limpar PNG</button>
+        <label>Moldura</label>
+        <div class="swatches">
+          <button class="swatch s-clean active" data-style="clean"></button>
+          <button class="swatch s-dark" data-style="dark"></button>
+          <button class="swatch s-premium" data-style="premium"></button>
+          <button class="swatch s-sale" data-style="sale"></button>
         </div>
       </div>
 
       <div class="panel" id="adjustPanel">
         <div class="control">
-          <label>Encaixe</label>
-          <div class="seg">
-            <button data-fit="cover" class="active">Cheio</button>
-            <button data-fit="contain">Inteiro</button>
-            <button data-fit="free">Livre</button>
-          </div>
-        </div>
-        <div class="control">
           <label>Zoom</label>
-          <input id="zoom" type="range" min="60" max="190" value="100">
+          <input id="zoom" type="range" min="80" max="180" value="100">
         </div>
-        <div class="control">
-          <label>Posição</label>
-          <div class="row">
-            <button class="icon" id="leftBtn" title="Esquerda">‹</button>
-            <button class="icon" id="upBtn" title="Subir">⌃</button>
-            <button class="icon" id="downBtn" title="Descer">⌄</button>
-            <button class="icon" id="rightBtn" title="Direita">›</button>
-          </div>
-        </div>
-      </div>
-
-      <div class="panel" id="removePanel">
-        <div class="control">
-          <label>Pincel</label>
-          <input id="brush" type="range" min="18" max="110" value="52">
-        </div>
-        <div class="row two">
-          <button id="autoCleanBtn">Auto</button>
-          <button id="undoCleanBtn">Desfazer</button>
+        <div class="row">
+          <button id="leftBtn">&lt;</button>
+          <button id="upBtn">Subir</button>
+          <button id="downBtn">Descer</button>
+          <button id="rightBtn">&gt;</button>
         </div>
       </div>
 
       <div class="row two">
-        <button id="downloadOneBtn">Baixar foto</button>
+        <button id="downloadBtn">Baixar foto</button>
         <button class="primary" id="downloadAllBtn">Baixar todas</button>
       </div>
-      <div class="install-tip">No celular, use “Adicionar à Tela de Início” para abrir como app.</div>
     </section>
   </div>
 
-  <input id="photoInput" class="hidden" type="file" accept="image/*" multiple>
-  <input id="frameInput" class="hidden" type="file" accept="image/png,image/webp,image/*">
+  <input id="photoInput" class="hidden" type="file" accept="image/jpeg,image/png,image/webp,image/*" multiple>
   <div class="toast" id="toast"></div>
 
   <script>
-    const canvas = document.getElementById('canvas');
-    const ctx = canvas.getContext('2d', { willReadFrequently: true });
-    const photoInput = document.getElementById('photoInput');
-    const frameInput = document.getElementById('frameInput');
-    const filmstrip = document.getElementById('filmstrip');
+    const frame = document.getElementById('frame');
+    const photoPreview = document.getElementById('photoPreview');
     const empty = document.getElementById('empty');
-    const count = document.getElementById('count');
+    const strip = document.getElementById('strip');
+    const counter = document.getElementById('counter');
+    const photoInput = document.getElementById('photoInput');
     const toastEl = document.getElementById('toast');
 
     const state = {
       photos: [],
-      selected: 0,
-      frame: 'clean',
-      customFrame: null,
-      fit: 'cover',
-      panel: null,
-      removing: false,
-      brush: 52,
-      drawing: false,
-      lastPoint: null
+      selected: -1,
+      style: 'clean',
+      zoom: 1,
+      x: 0,
+      y: 0
     };
 
-    const frameStyles = {
-      clean: { matte: '#f9f7f2', line: '#222831', band: '#ffffff', text: '#222831', accent: '#0b7f73' },
-      broker: { matte: '#0f2026', line: '#f5eee3', band: '#122a30', text: '#f9f7f2', accent: '#d9b36a' },
-      premium: { matte: '#e9dfd0', line: '#4f3c2f', band: '#fffaf2', text: '#3b3029', accent: '#a56d38' },
-      sale: { matte: '#0b7f73', line: '#ffffff', band: '#e2552e', text: '#ffffff', accent: '#f6d45e' }
+    const styleMap = {
+      clean: { bg: '#f9f7f2', border: '#0b7f73', capBg: '#ffffff', capText: '#222831', capSub: '#66707a' },
+      dark: { bg: '#102126', border: '#d9b36a', capBg: '#122a30', capText: '#ffffff', capSub: '#f5eee3' },
+      premium: { bg: '#e9dfd0', border: '#a56d38', capBg: '#fffaf2', capText: '#3b3029', capSub: '#66707a' },
+      sale: { bg: '#0b7f73', border: '#f6d45e', capBg: '#e2552e', capText: '#ffffff', capSub: '#ffffff' }
     };
 
-    function toast(message) {
-      toastEl.textContent = message;
+    function toast(text) {
+      toastEl.textContent = text;
       toastEl.classList.add('show');
       clearTimeout(toastEl.timer);
-      toastEl.timer = setTimeout(() => toastEl.classList.remove('show'), 2100);
+      toastEl.timer = setTimeout(() => toastEl.classList.remove('show'), 2300);
     }
 
-    function loadImage(src) {
-      return new Promise((resolve, reject) => {
-        const img = new Image();
-        img.decoding = 'async';
-        img.onload = () => resolve(img);
-        img.onerror = reject;
-        img.src = src;
-      });
-    }
-
-    function readFileAsDataURL(file) {
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-      });
-    }
-
-    async function decodePhotoFile(file) {
-      if (!file || !file.size) throw new Error('Arquivo vazio ou não disponível no aparelho');
-
-      if ('createImageBitmap' in window) {
-        try {
-          const bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' });
-          return {
-            source: bitmap,
-            width: bitmap.width,
-            height: bitmap.height,
-            previewUrl: URL.createObjectURL(file),
-            close: () => bitmap.close?.()
-          };
-        } catch (error) {
-          console.warn('createImageBitmap falhou, tentando FileReader', error);
-        }
-      }
-
-      const dataUrl = await readFileAsDataURL(file);
-      const img = await loadImage(dataUrl);
-      return {
-        source: img,
-        width: img.naturalWidth || img.width,
-        height: img.naturalHeight || img.height,
-        previewUrl: dataUrl,
-        close: () => {}
-      };
-    }
-
-    function makeWorkCanvas(decoded) {
-      const maxSide = 2600;
-      const sourceWidth = decoded.width || 1;
-      const sourceHeight = decoded.height || 1;
-      const scale = Math.min(1, maxSide / Math.max(sourceWidth, sourceHeight));
-      const work = document.createElement('canvas');
-      work.width = Math.max(1, Math.round(sourceWidth * scale));
-      work.height = Math.max(1, Math.round(sourceHeight * scale));
-      const workCtx = work.getContext('2d', { willReadFrequently: true });
-      workCtx.imageSmoothingEnabled = true;
-      workCtx.imageSmoothingQuality = 'high';
-      workCtx.fillStyle = '#ffffff';
-      workCtx.fillRect(0, 0, work.width, work.height);
-      workCtx.drawImage(decoded.source, 0, 0, work.width, work.height);
-      return work;
-    }
-
-    function photo() {
+    function current() {
       return state.photos[state.selected];
     }
 
-    function updateCount() {
-      const total = state.photos.length;
-      count.textContent = total === 1 ? '1 foto' : `${total} fotos`;
-      empty.style.display = total ? 'none' : 'grid';
-    }
+    function updatePreview() {
+      const item = current();
+      counter.textContent = state.photos.length === 1 ? '1 foto' : `${state.photos.length} fotos`;
 
-    function setPanel(name) {
-      state.panel = state.panel === name ? null : name;
-      document.querySelectorAll('.panel').forEach(panel => panel.classList.remove('open'));
-      if (state.panel) document.getElementById(`${state.panel}Panel`).classList.add('open');
-      state.removing = state.panel === 'remove';
-      render();
-    }
-
-    function imageRect(item) {
-      const margin = 96;
-      const lower = 164;
-      const box = { x: margin, y: margin, w: canvas.width - margin * 2, h: canvas.height - margin - lower };
-      const iw = item.work.width;
-      const ih = item.work.height;
-      const mode = item.fit || state.fit;
-      let scale = mode === 'contain' ? Math.min(box.w / iw, box.h / ih) : Math.max(box.w / iw, box.h / ih);
-      if (mode === 'free') scale = Math.min(box.w / iw, box.h / ih);
-      scale *= item.zoom;
-      const w = iw * scale;
-      const h = ih * scale;
-      return {
-        x: box.x + (box.w - w) / 2 + item.offsetX,
-        y: box.y + (box.h - h) / 2 + item.offsetY,
-        w, h, box
-      };
-    }
-
-    function drawFrame() {
-      const s = frameStyles[state.frame];
-      ctx.save();
-      ctx.fillStyle = s.matte;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = s.band;
-      ctx.fillRect(64, canvas.height - 184, canvas.width - 128, 106);
-      ctx.strokeStyle = s.line;
-      ctx.lineWidth = 12;
-      ctx.strokeRect(66, 66, canvas.width - 132, canvas.height - 236);
-      ctx.strokeStyle = s.accent;
-      ctx.lineWidth = 8;
-      ctx.strokeRect(92, 92, canvas.width - 184, canvas.height - 288);
-      ctx.fillStyle = s.text;
-      ctx.textAlign = 'center';
-      ctx.font = '700 52px Arial, sans-serif';
-      ctx.fillText('IMÓVEL EM DESTAQUE', canvas.width / 2, canvas.height - 124);
-      ctx.font = '400 30px Arial, sans-serif';
-      ctx.fillText('Foto pronta para anúncio', canvas.width / 2, canvas.height - 86);
-      ctx.restore();
-    }
-
-    function drawCustomFrame() {
-      if (!state.customFrame) return;
-      ctx.drawImage(state.customFrame, 0, 0, canvas.width, canvas.height);
-    }
-
-    function render(item = photo()) {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      drawFrame();
-
-      if (item) {
-        const rect = imageRect(item);
-        ctx.save();
-        ctx.beginPath();
-        ctx.rect(rect.box.x, rect.box.y, rect.box.w, rect.box.h);
-        ctx.clip();
-        ctx.drawImage(item.work, rect.x, rect.y, rect.w, rect.h);
-        ctx.restore();
+      if (!item) {
+        photoPreview.style.display = 'none';
+        empty.style.display = 'grid';
+        return;
       }
 
-      drawCustomFrame();
+      photoPreview.src = item.url;
+      photoPreview.style.display = 'block';
+      empty.style.display = 'none';
+      photoPreview.style.transform = `translate(${item.x}px, ${item.y}px) scale(${item.zoom})`;
 
-      if (state.removing && item) {
-        ctx.save();
-        ctx.strokeStyle = 'rgba(226, 85, 46, .9)';
-        ctx.lineWidth = 5;
-        ctx.setLineDash([18, 12]);
-        const rect = imageRect(item).box;
-        ctx.strokeRect(rect.x + 8, rect.y + 8, rect.w - 16, rect.h - 16);
-        ctx.restore();
-      }
+      frame.className = `frame style-${state.style}`;
     }
 
-    function rebuildFilmstrip() {
-      filmstrip.innerHTML = '';
+    function rebuildStrip() {
+      strip.innerHTML = '';
       state.photos.forEach((item, index) => {
         const button = document.createElement('button');
         button.className = `thumb ${index === state.selected ? 'active' : ''}`;
-        button.type = 'button';
         const img = document.createElement('img');
         img.src = item.url;
         img.alt = `Foto ${index + 1}`;
         button.appendChild(img);
         button.addEventListener('click', () => {
           state.selected = index;
-          rebuildFilmstrip();
-          syncControls();
-          render();
+          rebuildStrip();
+          updatePreview();
         });
-        filmstrip.appendChild(button);
+        strip.appendChild(button);
       });
-      updateCount();
     }
 
-    function syncControls() {
-      const item = photo();
-      document.getElementById('zoom').value = Math.round((item?.zoom || 1) * 100);
-      document.querySelectorAll('[data-fit]').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.fit === (item?.fit || state.fit));
+    function openImage(url) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = reject;
+        img.src = url;
       });
     }
 
     async function addPhotos(files) {
       const imageFiles = [...files].filter(file => file.type.startsWith('image/'));
-      let loaded = 0;
-      let failed = 0;
-      let firstNewIndex = state.photos.length;
+      if (!imageFiles.length) return toast('Use uma foto da camera ou salva no aparelho.');
 
+      const firstNew = state.photos.length;
       for (const file of imageFiles) {
+        const url = URL.createObjectURL(file);
         try {
-          toast(`Abrindo ${file.name || 'foto'}...`);
-          const decoded = await decodePhotoFile(file);
-          const work = makeWorkCanvas(decoded);
-          decoded.close();
-
+          await openImage(url);
           state.photos.push({
-            name: file.name.replace(/\.[^.]+$/, ''),
-            url: decoded.previewUrl,
-            original: null,
-            work,
-            history: [],
+            name: file.name.replace(/\.[^.]+$/, '') || 'foto',
+            url,
             zoom: 1,
-            offsetX: 0,
-            offsetY: 0,
-            fit: state.fit
+            x: 0,
+            y: 0
           });
-          loaded++;
-
-          if (loaded === 1) state.selected = firstNewIndex;
-          rebuildFilmstrip();
-          syncControls();
-          updateCount();
-          render(state.photos[state.selected]);
-          await new Promise(requestAnimationFrame);
-        } catch (error) {
-          failed++;
-          console.warn('Foto não carregada', file.name, file.type, file.size, error);
+        } catch {
+          URL.revokeObjectURL(url);
+          toast('Uma foto nao abriu. Tire pela camera ou baixe/salve no aparelho.');
         }
       }
 
-      if (state.photos.length && loaded) state.selected = firstNewIndex;
-      rebuildFilmstrip();
-      syncControls();
-      render();
-      if (loaded) toast(`${loaded} foto(s) pronta(s) na moldura`);
-      if (failed && loaded) toast(`${loaded} pronta(s). ${failed} não abriu. Tente JPG/PNG.`);
-      if (!loaded && imageFiles.length) toast('Não abriu. No Google Fotos, use Baixar/Salvar no dispositivo e tente JPG/PNG.');
+      if (state.photos.length > firstNew) {
+        state.selected = firstNew;
+        rebuildStrip();
+        updatePreview();
+        toast('Foto aberta na moldura');
+      }
+      photoInput.value = '';
     }
 
     function move(dx, dy) {
-      const item = photo();
+      const item = current();
       if (!item) return;
-      item.offsetX += dx;
-      item.offsetY += dy;
-      render();
+      item.x += dx;
+      item.y += dy;
+      updatePreview();
     }
 
-    function saveHistory(item) {
-      const copy = document.createElement('canvas');
-      copy.width = item.work.width;
-      copy.height = item.work.height;
-      copy.getContext('2d').drawImage(item.work, 0, 0);
-      item.history.push(copy);
-      if (item.history.length > 6) item.history.shift();
-    }
-
-    function canvasPoint(event) {
-      const rect = canvas.getBoundingClientRect();
-      const client = event.touches ? event.touches[0] : event;
-      return {
-        x: (client.clientX - rect.left) * (canvas.width / rect.width),
-        y: (client.clientY - rect.top) * (canvas.height / rect.height)
-      };
-    }
-
-    function stageToImage(item, point) {
-      const rect = imageRect(item);
-      return {
-        x: Math.round((point.x - rect.x) * (item.work.width / rect.w)),
-        y: Math.round((point.y - rect.y) * (item.work.height / rect.h))
-      };
-    }
-
-    function cleanCircle(item, x, y, radius) {
-      const wctx = item.work.getContext('2d', { willReadFrequently: true });
-      const image = wctx.getImageData(0, 0, item.work.width, item.work.height);
-      const data = image.data;
-      const r = Math.max(8, radius);
-      const x0 = Math.max(0, x - r);
-      const x1 = Math.min(item.work.width - 1, x + r);
-      const y0 = Math.max(0, y - r);
-      const y1 = Math.min(item.work.height - 1, y + r);
-      let sr = 0, sg = 0, sb = 0, countPix = 0;
-
-      for (let yy = y - r * 2; yy <= y + r * 2; yy += 8) {
-        for (let xx = x - r * 2; xx <= x + r * 2; xx += 8) {
-          const d = Math.hypot(xx - x, yy - y);
-          if (d < r || xx < 0 || yy < 0 || xx >= item.work.width || yy >= item.work.height) continue;
-          const i = (yy * item.work.width + xx) * 4;
-          sr += data[i]; sg += data[i + 1]; sb += data[i + 2]; countPix++;
-        }
-      }
-
-      if (!countPix) return;
-      sr /= countPix; sg /= countPix; sb /= countPix;
-
-      for (let yy = y0; yy <= y1; yy++) {
-        for (let xx = x0; xx <= x1; xx++) {
-          const d = Math.hypot(xx - x, yy - y);
-          if (d > r) continue;
-          const i = (yy * item.work.width + xx) * 4;
-          const edge = Math.min(1, (r - d) / (r * .48));
-          const mix = Math.max(0, Math.min(.92, edge));
-          data[i] = data[i] * (1 - mix) + sr * mix;
-          data[i + 1] = data[i + 1] * (1 - mix) + sg * mix;
-          data[i + 2] = data[i + 2] * (1 - mix) + sb * mix;
-        }
-      }
-      wctx.putImageData(image, 0, 0);
-    }
-
-    function cleanAt(event) {
-      const item = photo();
-      if (!item || !state.removing) return;
-      const p = stageToImage(item, canvasPoint(event));
-      cleanCircle(item, p.x, p.y, state.brush * (item.work.width / imageRect(item).w));
-      render();
-    }
-
-    function autoClean() {
-      const item = photo();
+    function resetCurrent() {
+      const item = current();
       if (!item) return;
-      saveHistory(item);
-      const wctx = item.work.getContext('2d', { willReadFrequently: true });
-      const img = wctx.getImageData(0, 0, item.work.width, item.work.height);
-      const data = img.data;
-      const startY = Math.floor(item.work.height * .58);
-      for (let y = startY; y < item.work.height; y += 12) {
-        for (let x = 0; x < item.work.width; x += 12) {
-          const i = (y * item.work.width + x) * 4;
-          const r = data[i], g = data[i + 1], b = data[i + 2];
-          const constructionColor = (r > 145 && g > 70 && b < 95) || (r > 170 && g > 150 && b < 90) || (b > 135 && r < 115);
-          const brightClutter = r + g + b > 650;
-          if (constructionColor || brightClutter) cleanCircle(item, x, y, Math.max(18, item.work.width * .018));
-        }
-      }
-      render();
-      toast('Limpeza automática aplicada');
+      item.zoom = 1;
+      item.x = 0;
+      item.y = 0;
+      document.getElementById('zoom').value = 100;
+      updatePreview();
+    }
+
+    function drawImageCover(ctx, img, x, y, w, h, zoom, ox, oy) {
+      const scale = Math.max(w / img.naturalWidth, h / img.naturalHeight) * zoom;
+      const dw = img.naturalWidth * scale;
+      const dh = img.naturalHeight * scale;
+      ctx.drawImage(img, x + (w - dw) / 2 + ox, y + (h - dh) / 2 + oy, dw, dh);
+    }
+
+    async function makeFinal(item) {
+      const img = await openImage(item.url);
+      const canvas = document.createElement('canvas');
+      canvas.width = 1200;
+      canvas.height = 1500;
+      const ctx = canvas.getContext('2d');
+      const s = styleMap[state.style];
+
+      ctx.fillStyle = s.bg;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      const box = { x: 96, y: 96, w: 1008, h: 1110 };
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(box.x, box.y, box.w, box.h);
+      ctx.clip();
+      ctx.fillStyle = '#eef1f4';
+      ctx.fillRect(box.x, box.y, box.w, box.h);
+      drawImageCover(ctx, img, box.x, box.y, box.w, box.h, item.zoom, item.x * 3, item.y * 3);
+      ctx.restore();
+
+      ctx.strokeStyle = s.border;
+      ctx.lineWidth = 16;
+      ctx.strokeRect(box.x, box.y, box.w, box.h);
+
+      ctx.fillStyle = s.capBg;
+      ctx.fillRect(96, 1290, 1008, 120);
+      ctx.fillStyle = s.capText;
+      ctx.textAlign = 'center';
+      ctx.font = '700 52px Arial';
+      ctx.fillText('IMOVEL EM DESTAQUE', 600, 1348);
+      ctx.fillStyle = s.capSub;
+      ctx.font = '400 30px Arial';
+      ctx.fillText('Foto pronta para anuncio', 600, 1392);
+
+      return canvas.toDataURL('image/jpeg', .94);
     }
 
     async function downloadItem(item, index) {
-      render(item);
-      await new Promise(requestAnimationFrame);
+      const url = await makeFinal(item);
       const link = document.createElement('a');
-      link.download = `${item.name || 'foto'}-com-moldura-${index + 1}.jpg`;
-      link.href = canvas.toDataURL('image/jpeg', .94);
+      link.href = url;
+      link.download = `${item.name}-com-moldura-${index + 1}.jpg`;
       link.click();
     }
 
     document.getElementById('pickBtn').addEventListener('click', () => photoInput.click());
-    document.getElementById('customFrameBtn').addEventListener('click', () => frameInput.click());
-    document.getElementById('clearFrameBtn').addEventListener('click', () => {
-      state.customFrame = null;
-      render();
-      toast('Moldura PNG removida');
-    });
-    document.getElementById('frameBtn').addEventListener('click', () => setPanel('frame'));
-    document.getElementById('adjustBtn').addEventListener('click', () => setPanel('adjust'));
-    document.getElementById('removeBtn').addEventListener('click', () => setPanel('remove'));
-    document.getElementById('leftBtn').addEventListener('click', () => move(-22, 0));
-    document.getElementById('rightBtn').addEventListener('click', () => move(22, 0));
-    document.getElementById('upBtn').addEventListener('click', () => move(0, -22));
-    document.getElementById('downBtn').addEventListener('click', () => move(0, 22));
-    document.getElementById('autoCleanBtn').addEventListener('click', autoClean);
-    document.getElementById('undoCleanBtn').addEventListener('click', () => {
-      const item = photo();
-      const previous = item?.history.pop();
-      if (!previous) return;
-      item.work = previous;
-      render();
-    });
-    document.getElementById('downloadOneBtn').addEventListener('click', () => {
-      const item = photo();
-      if (!item) return toast('Importe uma foto primeiro');
-      downloadItem(item, state.selected);
-    });
-    document.getElementById('downloadAllBtn').addEventListener('click', async () => {
-      if (!state.photos.length) return toast('Importe fotos primeiro');
-      for (let i = 0; i < state.photos.length; i++) await downloadItem(state.photos[i], i);
-      state.selected = Math.min(state.selected, state.photos.length - 1);
-      render();
+    photoInput.addEventListener('change', event => addPhotos(event.target.files));
+
+    document.getElementById('frameBtn').addEventListener('click', () => {
+      document.getElementById('framePanel').classList.toggle('open');
+      document.getElementById('adjustPanel').classList.remove('open');
     });
 
-    photoInput.addEventListener('change', event => addPhotos(event.target.files));
-    frameInput.addEventListener('change', async event => {
-      const file = event.target.files[0];
-      if (!file) return;
-      state.customFrame = await loadImage(URL.createObjectURL(file));
-      render();
-      toast('Moldura personalizada aplicada');
+    document.getElementById('adjustBtn').addEventListener('click', () => {
+      document.getElementById('adjustPanel').classList.toggle('open');
+      document.getElementById('framePanel').classList.remove('open');
     });
 
     document.querySelectorAll('.swatch').forEach(button => {
       button.addEventListener('click', () => {
-        state.frame = button.dataset.frame;
-        document.querySelectorAll('.swatch').forEach(b => b.classList.toggle('active', b === button));
-        render();
-      });
-    });
-
-    document.querySelectorAll('[data-fit]').forEach(button => {
-      button.addEventListener('click', () => {
-        const item = photo();
-        state.fit = button.dataset.fit;
-        if (item) item.fit = state.fit;
-        syncControls();
-        render();
+        state.style = button.dataset.style;
+        document.querySelectorAll('.swatch').forEach(item => item.classList.toggle('active', item === button));
+        updatePreview();
       });
     });
 
     document.getElementById('zoom').addEventListener('input', event => {
-      const item = photo();
+      const item = current();
       if (!item) return;
       item.zoom = Number(event.target.value) / 100;
-      render();
+      updatePreview();
     });
 
-    document.getElementById('brush').addEventListener('input', event => {
-      state.brush = Number(event.target.value);
+    document.getElementById('leftBtn').addEventListener('click', () => move(-12, 0));
+    document.getElementById('rightBtn').addEventListener('click', () => move(12, 0));
+    document.getElementById('upBtn').addEventListener('click', () => move(0, -12));
+    document.getElementById('downBtn').addEventListener('click', () => move(0, 12));
+    document.getElementById('resetBtn').addEventListener('click', resetCurrent);
+
+    document.getElementById('downloadBtn').addEventListener('click', async () => {
+      const item = current();
+      if (!item) return toast('Escolha uma foto tirada ou salva no celular.');
+      toast('Gerando foto...');
+      await downloadItem(item, state.selected);
     });
 
-    canvas.addEventListener('pointerdown', event => {
-      if (!state.removing || !photo()) return;
-      canvas.setPointerCapture(event.pointerId);
-      state.drawing = true;
-      saveHistory(photo());
-      cleanAt(event);
+    document.getElementById('downloadAllBtn').addEventListener('click', async () => {
+      if (!state.photos.length) return toast('Escolha fotos tiradas ou salvas no celular.');
+      toast('Gerando todas...');
+      for (let i = 0; i < state.photos.length; i++) await downloadItem(state.photos[i], i);
     });
 
-    canvas.addEventListener('pointermove', event => {
-      if (!state.drawing) return;
-      cleanAt(event);
-    });
-
-    canvas.addEventListener('pointerup', event => {
-      state.drawing = false;
-      try { canvas.releasePointerCapture(event.pointerId); } catch {}
-    });
-
-    canvas.addEventListener('pointercancel', () => {
-      state.drawing = false;
-    });
-
-    render();
-
-    if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
-      navigator.serviceWorker.register('./service-worker.js').catch(() => {});
-    }
+    updatePreview();
   </script>
 </body>
 </html>
